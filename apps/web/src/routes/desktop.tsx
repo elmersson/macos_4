@@ -1,11 +1,12 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import MacOSDesktop from "@/components/macos-desktop";
 
-export const Route = createFileRoute("/")({
-  component: HomeComponent,
+export const Route = createFileRoute("/desktop")({
+  component: DesktopComponent,
 });
 
-function HomeComponent() {
+function DesktopComponent() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -22,6 +23,9 @@ function HomeComponent() {
     );
   }
 
-  // Redirect to desktop if logged in, otherwise to login
-  return <Navigate to={isLoggedIn ? "/desktop" : "/login"} />;
+  if (!isLoggedIn) {
+    return <Navigate to="/login" />;
+  }
+
+  return <MacOSDesktop />;
 }
