@@ -81,6 +81,14 @@ type WindowState = {
   isOpen: boolean;
   position: AppPosition;
   isDragging: boolean;
+  size: { width: number; height: number };
+  isResizing: boolean;
+  resizeDirection: string;
+  isFullscreen: boolean;
+  previousState?: {
+    position: AppPosition;
+    size: { width: number; height: number };
+  };
 };
 
 export default function MacOSDesktop() {
@@ -97,8 +105,20 @@ export default function MacOSDesktop() {
     isOpen: false,
     position: { x: 100, y: 100 },
     isDragging: false,
+    size: { width: 600, height: 400 },
+    isResizing: false,
+    resizeDirection: "",
+    isFullscreen: false,
   });
   const [windowDragOffset, setWindowDragOffset] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    posX: 0,
+    posY: 0,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -177,6 +197,122 @@ export default function MacOSDesktop() {
     if (systemSettings.isDragging) {
       setSystemSettings((prev) => ({ ...prev, isDragging: false }));
     }
+    if (systemSettings.isResizing) {
+      setSystemSettings((prev) => ({
+        ...prev,
+        isResizing: false,
+        resizeDirection: "",
+      }));
+    }
+  };
+
+  const handleTitleBarDoubleClick = () => {
+    const MENU_BAR_ACTUAL_HEIGHT = 32; // h-8 in Tailwind
+
+    if (systemSettings.isFullscreen) {
+      // Restore to previous state
+      if (systemSettings.previousState) {
+        const { position, size } = systemSettings.previousState;
+        setSystemSettings((prev) => ({
+          ...prev,
+          isFullscreen: false,
+          position,
+          size,
+          previousState: undefined,
+        }));
+      }
+    } else {
+      // Go fullscreen
+      setSystemSettings((prev) => ({
+        ...prev,
+        isFullscreen: true,
+        previousState: {
+          position: prev.position,
+          size: prev.size,
+        },
+        position: { x: 0, y: MENU_BAR_ACTUAL_HEIGHT },
+        size: {
+          width: window.innerWidth,
+          height: window.innerHeight - MENU_BAR_ACTUAL_HEIGHT,
+        },
+      }));
+    }
+  };
+
+  const handleResizeMouseDown = (e: React.MouseEvent, direction: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setSystemSettings((prev) => ({
+      ...prev,
+      isResizing: true,
+      resizeDirection: direction,
+    }));
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: systemSettings.size.width,
+      height: systemSettings.size.height,
+      posX: systemSettings.position.x,
+      posY: systemSettings.position.y,
+    });
+  };
+
+  const handleResize = (e: React.MouseEvent) => {
+    if (!systemSettings.isResizing) {
+      return;
+    }
+
+    const MIN_WIDTH = 400;
+    const MIN_HEIGHT = 300;
+    const MAX_WIDTH = window.innerWidth - systemSettings.position.x;
+    const MAX_HEIGHT = window.innerHeight - systemSettings.position.y;
+
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+
+    let newWidth = systemSettings.size.width;
+    let newHeight = systemSettings.size.height;
+    let newX = systemSettings.position.x;
+    let newY = systemSettings.position.y;
+
+    if (systemSettings.resizeDirection.includes("e")) {
+      newWidth = Math.max(
+        MIN_WIDTH,
+        Math.min(resizeStart.width + deltaX, MAX_WIDTH)
+      );
+    }
+    if (systemSettings.resizeDirection.includes("s")) {
+      newHeight = Math.max(
+        MIN_HEIGHT,
+        Math.min(resizeStart.height + deltaY, MAX_HEIGHT)
+      );
+    }
+    if (systemSettings.resizeDirection.includes("w")) {
+      const potentialWidth = resizeStart.width - deltaX;
+      const potentialX = resizeStart.posX + deltaX;
+      if (potentialWidth >= MIN_WIDTH && potentialX >= 0) {
+        newWidth = potentialWidth;
+        newX = potentialX;
+      }
+    }
+    if (systemSettings.resizeDirection.includes("n")) {
+      const potentialHeight = resizeStart.height - deltaY;
+      const potentialY = resizeStart.posY + deltaY;
+      const TITLE_BAR_HEIGHT = 40;
+      if (
+        potentialHeight >= MIN_HEIGHT &&
+        potentialY >= MENU_BAR_HEIGHT + TITLE_BAR_HEIGHT
+      ) {
+        newHeight = potentialHeight;
+        newY = potentialY;
+      }
+    }
+
+    setSystemSettings((prev) => ({
+      ...prev,
+      size: { width: newWidth, height: newHeight },
+      position: { x: newX, y: newY },
+    }));
   };
 
   const handleWindowMouseDown = (
@@ -236,6 +372,7 @@ export default function MacOSDesktop() {
       onMouseMove={(e) => {
         handleMouseMove(e);
         handleWindowDrag(e);
+        handleResize(e);
       }}
       onMouseUp={handleMouseUp}
       role="application"
@@ -335,8 +472,8 @@ export default function MacOSDesktop() {
           style={{
             left: systemSettings.position.x,
             top: systemSettings.position.y,
-            width: 600,
-            height: 400,
+            width: systemSettings.size.width,
+            height: systemSettings.size.height,
           }}
         >
           {/* Window Title Bar */}
@@ -344,6 +481,7 @@ export default function MacOSDesktop() {
             className={`flex w-full items-center justify-between rounded-t-lg bg-gray-200 px-4 py-2 ${
               systemSettings.isDragging ? "cursor-grabbing" : "cursor-grab"
             }`}
+            onDoubleClick={handleTitleBarDoubleClick}
             onMouseDown={(e) =>
               handleWindowMouseDown(
                 e,
@@ -423,6 +561,64 @@ export default function MacOSDesktop() {
               </div>
             </div>
           </div>
+
+          {/* Resize Handles */}
+          <button
+            aria-label="Resize window from bottom-right"
+            className="absolute right-0 bottom-0 h-4 w-4 cursor-se-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "se")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
+          <button
+            aria-label="Resize window from bottom-left"
+            className="absolute bottom-0 left-0 h-4 w-4 cursor-sw-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "sw")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
+          <button
+            aria-label="Resize window from top-right"
+            className="absolute top-0 right-0 h-4 w-4 cursor-ne-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "ne")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
+          <button
+            aria-label="Resize window from top-left"
+            className="absolute top-0 left-0 h-4 w-4 cursor-nw-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "nw")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
+          <button
+            aria-label="Resize window from right"
+            className="absolute top-0 right-0 h-[calc(100%-16px)] w-2 cursor-e-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "e")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
+          <button
+            aria-label="Resize window from left"
+            className="absolute top-0 left-0 h-[calc(100%-16px)] w-2 cursor-w-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "w")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
+          <button
+            aria-label="Resize window from bottom"
+            className="absolute bottom-0 left-2 h-2 w-[calc(100%-16px)] cursor-s-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "s")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
+          <button
+            aria-label="Resize window from top"
+            className="absolute top-0 left-2 h-2 w-[calc(100%-16px)] cursor-n-resize"
+            onMouseDown={(e) => handleResizeMouseDown(e, "n")}
+            style={{ zIndex: 60 }}
+            type="button"
+          />
         </div>
       )}
     </div>
