@@ -78,13 +78,16 @@ const INITIAL_APPS: DesktopApp[] = [
 ];
 
 type WindowState = {
-  isOpen: boolean;
+  id: string;
+  appId: string;
+  title: string;
   position: AppPosition;
-  isDragging: boolean;
   size: { width: number; height: number };
+  isDragging: boolean;
   isResizing: boolean;
   resizeDirection: string;
   isFullscreen: boolean;
+  zIndex: number;
   previousState?: {
     position: AppPosition;
     size: { width: number; height: number };
@@ -101,15 +104,8 @@ export default function MacOSDesktop() {
   });
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [systemSettings, setSystemSettings] = useState<WindowState>({
-    isOpen: false,
-    position: { x: 100, y: 100 },
-    isDragging: false,
-    size: { width: 600, height: 400 },
-    isResizing: false,
-    resizeDirection: "",
-    isFullscreen: false,
-  });
+  const [windows, setWindows] = useState<WindowState[]>([]);
+  const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [windowDragOffset, setWindowDragOffset] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({
     x: 0,
@@ -194,100 +190,168 @@ export default function MacOSDesktop() {
 
   const handleMouseUp = () => {
     setDraggingId(null);
-    if (systemSettings.isDragging) {
-      setSystemSettings((prev) => ({ ...prev, isDragging: false }));
-    }
-    if (systemSettings.isResizing) {
-      setSystemSettings((prev) => ({
-        ...prev,
+    setWindows((prev) =>
+      prev.map((win) => ({
+        ...win,
+        isDragging: false,
         isResizing: false,
         resizeDirection: "",
-      }));
+      }))
+    );
+  };
+
+  const openWindow = (appId: string, title: string) => {
+    // Check if window already exists
+    const existingWindow = windows.find((w) => w.appId === appId);
+    if (existingWindow) {
+      // Bring to front
+      setActiveWindowId(existingWindow.id);
+      const maxZ = Math.max(...windows.map((w) => w.zIndex), 50);
+      setWindows((prev) =>
+        prev.map((w) =>
+          w.id === existingWindow.id ? { ...w, zIndex: maxZ + 1 } : w
+        )
+      );
+      return;
+    }
+
+    // Create new window
+    const newWindow: WindowState = {
+      id: `window-${Date.now()}`,
+      appId,
+      title,
+      position: { x: 100 + windows.length * 30, y: 100 + windows.length * 30 },
+      size: { width: 600, height: 400 },
+      isDragging: false,
+      isResizing: false,
+      resizeDirection: "",
+      isFullscreen: false,
+      zIndex: Math.max(...windows.map((w) => w.zIndex), 50) + 1,
+    };
+    setWindows((prev) => [...prev, newWindow]);
+    setActiveWindowId(newWindow.id);
+  };
+
+  const closeWindow = (windowId: string) => {
+    setWindows((prev) => prev.filter((w) => w.id !== windowId));
+    if (activeWindowId === windowId) {
+      setActiveWindowId(null);
     }
   };
 
-  const handleTitleBarDoubleClick = () => {
+  const bringToFront = (windowId: string) => {
+    const maxZ = Math.max(...windows.map((w) => w.zIndex), 50);
+    setWindows((prev) =>
+      prev.map((w) => (w.id === windowId ? { ...w, zIndex: maxZ + 1 } : w))
+    );
+    setActiveWindowId(windowId);
+  };
+
+  const handleTitleBarDoubleClick = (windowId: string) => {
     const MENU_BAR_ACTUAL_HEIGHT = 32; // h-8 in Tailwind
 
-    if (systemSettings.isFullscreen) {
-      // Restore to previous state
-      if (systemSettings.previousState) {
-        const { position, size } = systemSettings.previousState;
-        setSystemSettings((prev) => ({
-          ...prev,
-          isFullscreen: false,
-          position,
-          size,
-          previousState: undefined,
-        }));
-      }
-    } else {
-      // Go fullscreen
-      setSystemSettings((prev) => ({
-        ...prev,
-        isFullscreen: true,
-        previousState: {
-          position: prev.position,
-          size: prev.size,
-        },
-        position: { x: 0, y: MENU_BAR_ACTUAL_HEIGHT },
-        size: {
-          width: window.innerWidth,
-          height: window.innerHeight - MENU_BAR_ACTUAL_HEIGHT,
-        },
-      }));
-    }
+    setWindows((prev) =>
+      prev.map((win) => {
+        if (win.id !== windowId) {
+          return win;
+        }
+
+        if (win.isFullscreen) {
+          // Restore to previous state
+          if (win.previousState) {
+            const { position, size } = win.previousState;
+            return {
+              ...win,
+              isFullscreen: false,
+              position,
+              size,
+              previousState: undefined,
+            };
+          }
+          return win;
+        }
+        // Go fullscreen
+        return {
+          ...win,
+          isFullscreen: true,
+          previousState: {
+            position: win.position,
+            size: win.size,
+          },
+          position: { x: 0, y: MENU_BAR_ACTUAL_HEIGHT },
+          size: {
+            width: window.innerWidth,
+            height: window.innerHeight - MENU_BAR_ACTUAL_HEIGHT,
+          },
+        };
+      })
+    );
   };
 
-  const handleResizeMouseDown = (e: React.MouseEvent, direction: string) => {
+  const handleResizeMouseDown = (
+    e: React.MouseEvent,
+    windowId: string,
+    direction: string
+  ) => {
     e.stopPropagation();
     e.preventDefault();
-    setSystemSettings((prev) => ({
-      ...prev,
-      isResizing: true,
-      resizeDirection: direction,
-    }));
+
+    const win = windows.find((w) => w.id === windowId);
+    if (!win) {
+      return;
+    }
+
+    setWindows((prev) =>
+      prev.map((w) =>
+        w.id === windowId
+          ? { ...w, isResizing: true, resizeDirection: direction }
+          : w
+      )
+    );
+
     setResizeStart({
       x: e.clientX,
       y: e.clientY,
-      width: systemSettings.size.width,
-      height: systemSettings.size.height,
-      posX: systemSettings.position.x,
-      posY: systemSettings.position.y,
+      width: win.size.width,
+      height: win.size.height,
+      posX: win.position.x,
+      posY: win.position.y,
     });
+    setActiveWindowId(windowId);
   };
 
   const handleResize = (e: React.MouseEvent) => {
-    if (!systemSettings.isResizing) {
+    const activeWindow = windows.find((w) => w.isResizing);
+    if (!activeWindow) {
       return;
     }
 
     const MIN_WIDTH = 400;
     const MIN_HEIGHT = 300;
-    const MAX_WIDTH = window.innerWidth - systemSettings.position.x;
-    const MAX_HEIGHT = window.innerHeight - systemSettings.position.y;
+    const MAX_WIDTH = window.innerWidth - resizeStart.posX;
+    const MAX_HEIGHT = window.innerHeight - resizeStart.posY;
 
     const deltaX = e.clientX - resizeStart.x;
     const deltaY = e.clientY - resizeStart.y;
 
-    let newWidth = systemSettings.size.width;
-    let newHeight = systemSettings.size.height;
-    let newX = systemSettings.position.x;
-    let newY = systemSettings.position.y;
+    let newWidth = resizeStart.width;
+    let newHeight = resizeStart.height;
+    let newX = resizeStart.posX;
+    let newY = resizeStart.posY;
 
-    if (systemSettings.resizeDirection.includes("e")) {
+    if (activeWindow.resizeDirection.includes("e")) {
       newWidth = Math.max(
         MIN_WIDTH,
         Math.min(resizeStart.width + deltaX, MAX_WIDTH)
       );
     }
-    if (systemSettings.resizeDirection.includes("s")) {
+    if (activeWindow.resizeDirection.includes("s")) {
       newHeight = Math.max(
         MIN_HEIGHT,
         Math.min(resizeStart.height + deltaY, MAX_HEIGHT)
       );
     }
-    if (systemSettings.resizeDirection.includes("w")) {
+    if (activeWindow.resizeDirection.includes("w")) {
       const potentialWidth = resizeStart.width - deltaX;
       const potentialX = resizeStart.posX + deltaX;
       if (potentialWidth >= MIN_WIDTH && potentialX >= 0) {
@@ -295,7 +359,7 @@ export default function MacOSDesktop() {
         newX = potentialX;
       }
     }
-    if (systemSettings.resizeDirection.includes("n")) {
+    if (activeWindow.resizeDirection.includes("n")) {
       const potentialHeight = resizeStart.height - deltaY;
       const potentialY = resizeStart.posY + deltaY;
       const TITLE_BAR_HEIGHT = 40;
@@ -308,20 +372,30 @@ export default function MacOSDesktop() {
       }
     }
 
-    setSystemSettings((prev) => ({
-      ...prev,
-      size: { width: newWidth, height: newHeight },
-      position: { x: newX, y: newY },
-    }));
+    setWindows((prev) =>
+      prev.map((w) =>
+        w.id === activeWindow.id
+          ? {
+              ...w,
+              size: { width: newWidth, height: newHeight },
+              position: { x: newX, y: newY },
+            }
+          : w
+      )
+    );
   };
 
   const handleWindowMouseDown = (
     e: React.MouseEvent,
+    windowId: string,
     currentX: number,
     currentY: number
   ) => {
     e.stopPropagation();
-    setSystemSettings((prev) => ({ ...prev, isDragging: true }));
+    bringToFront(windowId);
+    setWindows((prev) =>
+      prev.map((w) => (w.id === windowId ? { ...w, isDragging: true } : w))
+    );
     setWindowDragOffset({
       x: e.clientX - currentX,
       y: e.clientY - currentY,
@@ -329,7 +403,8 @@ export default function MacOSDesktop() {
   };
 
   const handleWindowDrag = (e: React.MouseEvent) => {
-    if (!systemSettings.isDragging) {
+    const draggingWindow = windows.find((w) => w.isDragging);
+    if (!draggingWindow) {
       return;
     }
 
@@ -338,29 +413,109 @@ export default function MacOSDesktop() {
     const newX = e.clientX - windowDragOffset.x;
     const newY = e.clientY - windowDragOffset.y;
 
-    const WINDOW_WIDTH = 600;
-    const WINDOW_HEIGHT = 400;
-    const maxX = window.innerWidth - WINDOW_WIDTH;
-    const maxY = window.innerHeight - WINDOW_HEIGHT;
+    const maxX = window.innerWidth - draggingWindow.size.width;
+    const maxY = window.innerHeight - draggingWindow.size.height;
 
-    setSystemSettings((prev) => ({
-      ...prev,
-      position: {
-        x: Math.max(WINDOW_MIN_MARGIN, Math.min(newX, maxX)),
-        y: Math.max(
-          MENU_BAR_HEIGHT + WINDOW_TITLE_HEIGHT,
-          Math.min(newY, maxY)
-        ),
-      },
-    }));
+    setWindows((prev) =>
+      prev.map((w) =>
+        w.id === draggingWindow.id
+          ? {
+              ...w,
+              position: {
+                x: Math.max(WINDOW_MIN_MARGIN, Math.min(newX, maxX)),
+                y: Math.max(
+                  MENU_BAR_HEIGHT + WINDOW_TITLE_HEIGHT,
+                  Math.min(newY, maxY)
+                ),
+              },
+            }
+          : w
+      )
+    );
   };
 
-  const toggleSystemSettings = () => {
-    setSystemSettings((prev) => ({
-      ...prev,
-      isOpen: !prev.isOpen,
-      position: prev.isOpen ? prev.position : { x: 100, y: 100 },
-    }));
+  const handleDesktopIconClick = (appId: string, appName: string) => {
+    openWindow(appId, appName);
+  };
+
+  const handleAppleMenuClick = () => {
+    openWindow("system-settings", "System Settings");
+  };
+
+  const getWindowContent = (appId: string) => {
+    switch (appId) {
+      case "system-settings":
+        return (
+          <div className="h-full overflow-y-auto bg-white p-6">
+            <h2 className="mb-4 font-semibold text-2xl text-gray-800">
+              Welcome, {username}!
+            </h2>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { name: "Wi-Fi", icon: "📶" },
+                { name: "Bluetooth", icon: "🔵" },
+                { name: "Network", icon: "🌐" },
+                { name: "Notifications", icon: "🔔" },
+                { name: "Sound", icon: "🔊" },
+                { name: "Focus", icon: "🎯" },
+                { name: "Screen Time", icon: "⏱️" },
+                { name: "General", icon: "⚙️" },
+                { name: "Appearance", icon: "🎨" },
+              ].map((setting) => (
+                <button
+                  className="flex flex-col items-center space-y-2 rounded-lg bg-gray-100 p-4 transition-colors hover:bg-gray-200"
+                  key={setting.name}
+                  type="button"
+                >
+                  <span className="text-3xl">{setting.icon}</span>
+                  <span className="text-gray-700 text-sm">{setting.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      case "finder":
+        return (
+          <div className="flex h-full flex-col bg-white p-4">
+            <h2 className="mb-4 font-semibold text-xl">Finder</h2>
+            <p className="text-gray-600">File browser content goes here...</p>
+          </div>
+        );
+      case "safari":
+        return (
+          <div className="flex h-full flex-col bg-white p-4">
+            <h2 className="mb-4 font-semibold text-xl">Safari</h2>
+            <p className="text-gray-600">Web browser content goes here...</p>
+          </div>
+        );
+      case "mail":
+        return (
+          <div className="flex h-full flex-col bg-white p-4">
+            <h2 className="mb-4 font-semibold text-xl">Mail</h2>
+            <p className="text-gray-600">Email client content goes here...</p>
+          </div>
+        );
+      case "photos":
+        return (
+          <div className="flex h-full flex-col bg-white p-4">
+            <h2 className="mb-4 font-semibold text-xl">Photos</h2>
+            <p className="text-gray-600">Photo library content goes here...</p>
+          </div>
+        );
+      case "music":
+        return (
+          <div className="flex h-full flex-col bg-white p-4">
+            <h2 className="mb-4 font-semibold text-xl">Music</h2>
+            <p className="text-gray-600">Music player content goes here...</p>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex h-full items-center justify-center bg-white">
+            <p className="text-gray-600">No content available</p>
+          </div>
+        );
+    }
   };
 
   const DOCK_ICON_COUNT = 5;
@@ -386,9 +541,9 @@ export default function MacOSDesktop() {
           <button
             aria-label="Open System Settings"
             className="rounded px-2 py-1 font-bold text-xl transition-colors hover:bg-white/10"
-            onClick={toggleSystemSettings}
+            onClick={handleAppleMenuClick}
             type="button"
-          />
+          ></button>
           <span className="font-medium text-sm">Finder</span>
         </div>
 
@@ -424,6 +579,7 @@ export default function MacOSDesktop() {
               draggingId === app.id ? "cursor-grabbing" : "cursor-grab"
             }`}
             key={app.id}
+            onDoubleClick={() => handleDesktopIconClick(app.id, app.name)}
             onMouseDown={(e) =>
               handleMouseDown(e, app.id, app.position.x, app.position.y)
             }
@@ -465,29 +621,27 @@ export default function MacOSDesktop() {
         </div>
       </div>
 
-      {/* System Settings Window */}
-      {systemSettings.isOpen && (
+      {/* Windows */}
+      {windows.map((win) => (
         <div
-          className="absolute z-50 rounded-lg bg-white shadow-2xl"
+          className="absolute rounded-lg bg-white shadow-2xl"
+          key={win.id}
           style={{
-            left: systemSettings.position.x,
-            top: systemSettings.position.y,
-            width: systemSettings.size.width,
-            height: systemSettings.size.height,
+            left: win.position.x,
+            top: win.position.y,
+            width: win.size.width,
+            height: win.size.height,
+            zIndex: win.zIndex,
           }}
         >
           {/* Window Title Bar */}
           <button
             className={`flex w-full items-center justify-between rounded-t-lg bg-gray-200 px-4 py-2 ${
-              systemSettings.isDragging ? "cursor-grabbing" : "cursor-grab"
+              win.isDragging ? "cursor-grabbing" : "cursor-grab"
             }`}
-            onDoubleClick={handleTitleBarDoubleClick}
+            onDoubleClick={() => handleTitleBarDoubleClick(win.id)}
             onMouseDown={(e) =>
-              handleWindowMouseDown(
-                e,
-                systemSettings.position.x,
-                systemSettings.position.y
-              )
+              handleWindowMouseDown(e, win.id, win.position.x, win.position.y)
             }
             type="button"
           >
@@ -495,7 +649,10 @@ export default function MacOSDesktop() {
               <button
                 aria-label="Close window"
                 className="h-3 w-3 rounded-full bg-red-500 transition-colors hover:bg-red-600"
-                onClick={toggleSystemSettings}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeWindow(win.id);
+                }}
                 type="button"
               />
               <button
@@ -506,121 +663,83 @@ export default function MacOSDesktop() {
               <button
                 aria-label="Maximize window"
                 className="h-3 w-3 rounded-full bg-green-500 transition-colors hover:bg-green-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTitleBarDoubleClick(win.id);
+                }}
                 type="button"
               />
             </div>
             <span className="font-medium text-gray-700 text-sm">
-              System Settings
+              {win.title}
             </span>
             <div className="w-16" />
           </button>
 
           {/* Window Content */}
-          <div className="h-[calc(100%-40px)] overflow-y-auto bg-white p-6">
-            <h2 className="mb-4 font-semibold text-2xl text-gray-800">
-              System Settings
-            </h2>
-
-            {/* Settings Grid */}
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { icon: "🖥️", name: "Display" },
-                { icon: "🔊", name: "Sound" },
-                { icon: "🌐", name: "Network" },
-                { icon: "🔒", name: "Privacy" },
-                { icon: "👤", name: "Users" },
-                { icon: "⚡", name: "Battery" },
-                { icon: "🎨", name: "Appearance" },
-                { icon: "⌨️", name: "Keyboard" },
-                { icon: "🖱️", name: "Mouse" },
-              ].map((setting) => (
-                <button
-                  className="flex flex-col items-center space-y-2 rounded-lg border border-gray-200 p-4 transition-all hover:border-blue-400 hover:bg-blue-50"
-                  key={setting.name}
-                  type="button"
-                >
-                  <span className="text-4xl">{setting.icon}</span>
-                  <span className="text-center text-gray-700 text-sm">
-                    {setting.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {/* User Info Section */}
-            <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <h3 className="mb-2 font-medium text-gray-800">User Account</h3>
-              <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-2xl text-white">
-                  👤
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">{username}</p>
-                  <p className="text-gray-600 text-sm">Administrator</p>
-                </div>
-              </div>
-            </div>
+          <div className="h-[calc(100%-40px)]">
+            {getWindowContent(win.appId)}
           </div>
 
           {/* Resize Handles */}
           <button
             aria-label="Resize window from bottom-right"
             className="absolute right-0 bottom-0 h-4 w-4 cursor-se-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "se")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "se")}
             style={{ zIndex: 60 }}
             type="button"
           />
           <button
             aria-label="Resize window from bottom-left"
             className="absolute bottom-0 left-0 h-4 w-4 cursor-sw-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "sw")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "sw")}
             style={{ zIndex: 60 }}
             type="button"
           />
           <button
             aria-label="Resize window from top-right"
             className="absolute top-0 right-0 h-4 w-4 cursor-ne-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "ne")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "ne")}
             style={{ zIndex: 60 }}
             type="button"
           />
           <button
             aria-label="Resize window from top-left"
             className="absolute top-0 left-0 h-4 w-4 cursor-nw-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "nw")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "nw")}
             style={{ zIndex: 60 }}
             type="button"
           />
           <button
             aria-label="Resize window from right"
             className="absolute top-0 right-0 h-[calc(100%-16px)] w-2 cursor-e-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "e")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "e")}
             style={{ zIndex: 60 }}
             type="button"
           />
           <button
             aria-label="Resize window from left"
             className="absolute top-0 left-0 h-[calc(100%-16px)] w-2 cursor-w-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "w")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "w")}
             style={{ zIndex: 60 }}
             type="button"
           />
           <button
             aria-label="Resize window from bottom"
             className="absolute bottom-0 left-2 h-2 w-[calc(100%-16px)] cursor-s-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "s")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "s")}
             style={{ zIndex: 60 }}
             type="button"
           />
           <button
             aria-label="Resize window from top"
             className="absolute top-0 left-2 h-2 w-[calc(100%-16px)] cursor-n-resize"
-            onMouseDown={(e) => handleResizeMouseDown(e, "n")}
+            onMouseDown={(e) => handleResizeMouseDown(e, win.id, "n")}
             style={{ zIndex: 60 }}
             type="button"
           />
         </div>
-      )}
+      ))}
     </div>
   );
 }
