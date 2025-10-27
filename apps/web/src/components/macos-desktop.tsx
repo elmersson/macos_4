@@ -247,6 +247,10 @@ export default function MacOSDesktop() {
     setActiveWindowId(windowId);
   };
 
+  const focusWindow = (windowId: string) => {
+    bringToFront(windowId);
+  };
+
   const handleTitleBarDoubleClick = (windowId: string) => {
     const MENU_BAR_ACTUAL_HEIGHT = 32; // h-8 in Tailwind
 
@@ -543,7 +547,7 @@ export default function MacOSDesktop() {
             className="rounded px-2 py-1 font-bold text-xl transition-colors hover:bg-white/10"
             onClick={handleAppleMenuClick}
             type="button"
-          ></button>
+          />
           <span className="font-medium text-sm">Finder</span>
         </div>
 
@@ -602,22 +606,56 @@ export default function MacOSDesktop() {
       {/* Dock */}
       <div className="-translate-x-1/2 absolute bottom-4 left-1/2 z-50 transform">
         <div className="flex items-center space-x-2 rounded-2xl bg-white/20 p-2 backdrop-blur-md">
-          {apps.slice(0, DOCK_ICON_COUNT).map((app) => (
+          {apps.slice(0, DOCK_ICON_COUNT).map((app) => {
+            const isOpen = windows.some((w) => w.appId === app.id);
+            return (
+              <div className="relative flex flex-col items-center" key={app.id}>
+                <button
+                  className="flex h-16 w-16 items-center justify-center rounded-xl text-3xl transition-transform hover:scale-110 hover:bg-white/10"
+                  onClick={() => openWindow(app.id, app.name)}
+                  type="button"
+                >
+                  {app.icon}
+                </button>
+                {isOpen && (
+                  <div className="-bottom-1 absolute h-1 w-1 rounded-full bg-white" />
+                )}
+              </div>
+            );
+          })}
+
+          {/* System Settings - Only show if open */}
+          {windows.some((w) => w.appId === "system-settings") && (
+            <>
+              <div className="mx-2 h-12 w-px bg-white/30" />
+              <div className="relative flex flex-col items-center">
+                <button
+                  className="flex h-16 w-16 items-center justify-center rounded-xl text-3xl transition-transform hover:scale-110 hover:bg-white/10"
+                  onClick={() =>
+                    openWindow("system-settings", "System Settings")
+                  }
+                  type="button"
+                >
+                  ⚙️
+                </button>
+                <div className="-bottom-1 absolute h-1 w-1 rounded-full bg-white" />
+              </div>
+            </>
+          )}
+
+          <div className="mx-2 h-12 w-px bg-white/30" />
+          <div className="relative flex flex-col items-center">
             <button
               className="flex h-16 w-16 items-center justify-center rounded-xl text-3xl transition-transform hover:scale-110 hover:bg-white/10"
-              key={app.id}
+              onClick={() => openWindow("trash", "Trash")}
               type="button"
             >
-              {app.icon}
+              🗑️
             </button>
-          ))}
-          <div className="mx-2 h-12 w-px bg-white/30" />
-          <button
-            className="flex h-16 w-16 items-center justify-center rounded-xl text-3xl transition-transform hover:scale-110 hover:bg-white/10"
-            type="button"
-          >
-            🗑️
-          </button>
+            {windows.some((w) => w.appId === "trash") && (
+              <div className="-bottom-1 absolute h-1 w-1 rounded-full bg-white" />
+            )}
+          </div>
         </div>
       </div>
 
@@ -677,9 +715,13 @@ export default function MacOSDesktop() {
           </button>
 
           {/* Window Content */}
-          <div className="h-[calc(100%-40px)]">
+          <button
+            className="h-[calc(100%-40px)] w-full text-left"
+            onClick={() => focusWindow(win.id)}
+            type="button"
+          >
             {getWindowContent(win.appId)}
-          </div>
+          </button>
 
           {/* Resize Handles */}
           <button
