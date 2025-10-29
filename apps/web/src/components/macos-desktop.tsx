@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { DesktopIcon } from "./desktop/DesktopIcon";
 import { Dock } from "./desktop/Dock";
@@ -10,7 +9,6 @@ import { Window } from "./desktop/Window";
 export default function MacOSDesktop() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [username] = useState(localStorage.getItem("username") || "User");
-  const navigate = useNavigate();
 
   const {
     apps,

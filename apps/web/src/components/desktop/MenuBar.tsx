@@ -1,3 +1,5 @@
+import { Battery } from "../navbar/battery";
+
 type MenuBarProps = {
   currentTime: Date;
   username: string;
@@ -17,17 +19,12 @@ export function MenuBar({
           className="rounded px-2 py-1 font-bold text-xl transition-colors hover:bg-white/10"
           onClick={onAppleMenuClick}
           type="button"
-        ></button>
+        />
         <span className="font-medium text-sm">Finder</span>
       </div>
 
       <div className="flex items-center space-x-4">
-        <button
-          className="rounded px-2 py-1 text-sm transition-colors hover:bg-white/10"
-          type="button"
-        >
-          🔋 100%
-        </button>
+        <Battery />
         <button
           className="rounded px-2 py-1 text-sm transition-colors hover:bg-white/10"
           type="button"
