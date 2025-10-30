@@ -1,4 +1,5 @@
 import { Battery } from "../navbar/battery";
+import { Wifi } from "../navbar/wifi";
 
 type MenuBarProps = {
   currentTime: Date;
@@ -25,12 +26,7 @@ export function MenuBar({
 
       <div className="flex items-center space-x-4">
         <Battery />
-        <button
-          className="rounded px-2 py-1 text-sm transition-colors hover:bg-white/10"
-          type="button"
-        >
-          📶
-        </button>
+        <Wifi />
         <span className="text-sm">
           {currentTime.toLocaleDateString("en-US", {
             weekday: "short",
