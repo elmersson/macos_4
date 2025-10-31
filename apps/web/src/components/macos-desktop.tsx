@@ -71,11 +71,7 @@ export default function MacOSDesktop() {
       <div className="absolute inset-0 bg-black/10" />
 
       {/* Menu Bar */}
-      <MenuBar
-        currentTime={currentTime}
-        onAppleMenuClick={handleAppleMenuClick}
-        username={username}
-      />
+      <MenuBar onAppleMenuClick={handleAppleMenuClick} />
 
       {/* Desktop Icons */}
       <div className="relative z-10 h-full">
