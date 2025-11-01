@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { DesktopIcon } from "./desktop/DesktopIcon";
-import { Dock } from "./desktop/Dock";
 import { MenuBar } from "./desktop/MenuBar";
 import { useDesktopIcons } from "./desktop/useDesktopIcons";
 import { useWindowManagement } from "./desktop/useWindowManagement";
 import { Window } from "./desktop/Window";
+import { Dock } from "./dock/Dock";
 
 export default function MacOSDesktop() {
   const [currentTime, setCurrentTime] = useState(new Date());
