@@ -32,7 +32,7 @@ export function Window({
 }: WindowProps) {
   return (
     <div
-      className="absolute z-50 rounded-lg bg-white shadow-2xl"
+      className="absolute z-50 rounded-lg bg-white shadow-2xl dark:bg-gray-800"
       style={{
         left: win.position.x,
         top: win.position.y,
@@ -43,7 +43,7 @@ export function Window({
     >
       {/* Window Title Bar */}
       <button
-        className={`flex w-full items-center justify-between rounded-t-lg bg-gray-200 px-4 py-2 ${
+        className={`flex w-full items-center justify-between rounded-t-lg bg-gray-200 px-4 py-2 dark:bg-gray-800 ${
           win.isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         onDoubleClick={() => onDoubleClick(win.id)}
@@ -70,7 +70,9 @@ export function Window({
             type="button"
           />
         </div>
-        <span className="font-medium text-gray-700 text-sm">{win.title}</span>
+        <span className="font-medium text-gray-700 text-sm dark:text-gray-300">
+          {win.title}
+        </span>
         <div className="w-16" />
       </button>
 
