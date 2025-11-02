@@ -3,9 +3,17 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@utility dock-bg {
+  @apply border border-neutral-700/30 bg-neutral-700/60 bg-clip-padding backdrop-blur-3xl backdrop-filter dark:border-neutral-700/40 dark:bg-neutral-800/30;
+}
+
 @theme {
-  --font-sans: "Inter", "Geist", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:
+    "Inter", "Geist", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-neutral-300-10: #d4d4d41a;
+  --color-neutral-500-10: #7373731a;
 }
 
 html,
