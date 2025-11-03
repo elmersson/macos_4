@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { DesktopIcon } from "./desktop/DesktopIcon";
 import { MenuBar } from "./desktop/MenuBar";
 import { useDesktopIcons } from "./desktop/useDesktopIcons";
@@ -7,7 +7,6 @@ import { Window } from "./desktop/Window";
 import { Dock } from "./dock/Dock";
 
 export default function MacOSDesktop() {
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [username] = useState(localStorage.getItem("username") || "User");
 
   const {
@@ -30,15 +29,6 @@ export default function MacOSDesktop() {
     handleTitleBarDoubleClick,
     handleMouseUp: handleWindowMouseUp,
   } = useWindowManagement();
-
-  useEffect(() => {
-    const TIMER_INTERVAL = 1000;
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, TIMER_INTERVAL);
-
-    return () => clearInterval(timer);
-  }, []);
 
   const handleAppleMenuClick = () => {
     openWindow("system-settings", "System Settings");
