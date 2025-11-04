@@ -1,3 +1,4 @@
+import { ChevronsLeftRight, Minus, X } from "lucide-react";
 import { ResizeHandles } from "./ResizeHandles";
 import type { WindowState } from "./types";
 import { WindowContent } from "./WindowContent";
@@ -52,23 +53,30 @@ export function Window({
         }
         type="button"
       >
-        <div className="flex items-center space-x-2">
+        <div className="group flex items-center space-x-2">
           <button
             aria-label="Close window"
-            className="h-3 w-3 rounded-full bg-red-500 transition-colors hover:bg-red-600"
+            className="h-3 w-3 rounded-full bg-red-500 transition-colors hover:bg-red-600 group-hover:bg-red-600"
             onClick={() => onClose(win.id)}
             type="button"
-          />
+          >
+            <X className="hidden h-full w-full text-gray-800/50 group-hover:block" />
+          </button>
           <button
             aria-label="Minimize window"
-            className="h-3 w-3 rounded-full bg-yellow-500 transition-colors hover:bg-yellow-600"
+            className="h-3 w-3 rounded-full bg-yellow-500 transition-colors hover:bg-yellow-600 group-hover:bg-yellow-600"
             type="button"
-          />
+          >
+            <Minus className="hidden h-full w-full text-gray-800/50 group-hover:block" />
+          </button>
           <button
             aria-label="Maximize window"
-            className="h-3 w-3 rounded-full bg-green-500 transition-colors hover:bg-green-600"
+            className="h-3 w-3 rounded-full bg-green-500 transition-colors hover:bg-green-600 group-hover:bg-green-600"
+            onClick={() => onDoubleClick(win.id)}
             type="button"
-          />
+          >
+            <ChevronsLeftRight className="hidden h-full w-full rotate-45 text-gray-800/50 group-hover:block" />
+          </button>
         </div>
         <span className="font-medium text-gray-700 text-sm dark:text-gray-300">
           {win.title}
