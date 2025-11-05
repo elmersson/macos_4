@@ -5,6 +5,7 @@ import { MusicContent } from "./window-content/MusicContent";
 import { PhotosContent } from "./window-content/PhotosContent";
 import { SafariContent } from "./window-content/SafariContent";
 import { SystemSettingsContent } from "./window-content/SystemSettingsContent";
+import { TerminalContent } from "./window-content/TerminalContent";
 import { TrashContent } from "./window-content/TrashContent";
 
 type WindowContentProps = {
@@ -26,6 +27,8 @@ export function WindowContent({ appId, username }: WindowContentProps) {
       return <PhotosContent />;
     case "music":
       return <MusicContent />;
+    case "terminal":
+      return <TerminalContent username={username} />;
     case "trash":
       return <TrashContent />;
     default:
