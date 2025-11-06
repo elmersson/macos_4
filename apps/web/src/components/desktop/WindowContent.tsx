@@ -1,12 +1,12 @@
-import { DefaultContent } from "./window-content/DefaultContent";
-import { FinderContent } from "./window-content/FinderContent";
-import { MailContent } from "./window-content/MailContent";
-import { MusicContent } from "./window-content/MusicContent";
-import { PhotosContent } from "./window-content/PhotosContent";
-import { SafariContent } from "./window-content/SafariContent";
-import { SystemSettingsContent } from "./window-content/SystemSettingsContent";
-import { TerminalContent } from "./window-content/TerminalContent";
-import { TrashContent } from "./window-content/TrashContent";
+import { DefaultContent } from "./window-content/default-content";
+import { FinderContent } from "./window-content/finder-content";
+import { MailContent } from "./window-content/mail-content";
+import { MusicContent } from "./window-content/music-content";
+import { PhotosContent } from "./window-content/photos-content";
+import { SafariContent } from "./window-content/safari-content";
+import { SystemSettingsContent } from "./window-content/system-settings-content";
+import { TerminalContent } from "./window-content/terminal-content";
+import { TrashContent } from "./window-content/trash-content";
 
 type WindowContentProps = {
   appId: string;
@@ -18,7 +18,7 @@ export function WindowContent({ appId, username }: WindowContentProps) {
     case "system-settings":
       return <SystemSettingsContent username={username} />;
     case "finder":
-      return <FinderContent />;
+      return <FinderContent username={username} />;
     case "safari":
       return <SafariContent />;
     case "mail":
