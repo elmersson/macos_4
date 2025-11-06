@@ -7,7 +7,9 @@ import { Window } from "./desktop/Window";
 import { Dock } from "./dock/Dock";
 
 export default function MacOSDesktop() {
-  const [username] = useState(localStorage.getItem("username") || "User");
+  const [username] = useState(
+    (localStorage.getItem("username") || "User").trim()
+  );
 
   const {
     apps,
