@@ -114,7 +114,7 @@ export function TerminalContent({ username }: TerminalContentProps) {
 
   return (
     <div
-      className="flex h-full flex-col bg-black font-mono text-green-400 text-sm"
+      className="flex h-full flex-col bg-black font-hack-nerd-font text-green-400 text-sm"
       onClick={handleTerminalClick}
     >
       <div className="flex-1 overflow-y-auto p-4" ref={terminalRef}>

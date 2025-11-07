@@ -162,7 +162,7 @@ export function FinderContent({ username }: FinderContentProps) {
   const currentItems = fileSystem[currentPath] || [];
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-gray-900">
+    <div className="flex h-full flex-col rounded-b-lg bg-white dark:bg-gray-900">
       <div className="border-gray-200 border-b p-4 dark:border-gray-700">
         <div className="mb-2 flex items-center">
           {currentPath !== "/" && (

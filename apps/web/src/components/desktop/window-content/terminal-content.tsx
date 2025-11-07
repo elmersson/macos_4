@@ -183,13 +183,13 @@ export function TerminalContent({ username }: TerminalContentProps) {
 
   return (
     <div
-      className="flex h-full flex-col bg-black font-mono text-green-400 text-sm"
+      className="flex h-full flex-col rounded-b-lg rounded-b-lg bg-gray-900 font-mono text-green-600 text-xs"
       onClick={handleTerminalClick}
       role="application"
       tabIndex={0}
     >
-      <div className="flex-1 overflow-y-auto p-4" ref={terminalRef}>
-        <div className="mb-2">
+      <div className="flex-1 overflow-y-auto p-2" ref={terminalRef}>
+        <div className="mb-2 text-neutral-100">
           Last login: {new Date().toLocaleString()} on ttys000
         </div>
         {history.map((line, index) => (
@@ -204,7 +204,7 @@ export function TerminalContent({ username }: TerminalContentProps) {
           </span>
           <input
             autoFocus
-            className="ml-2 flex-1 bg-transparent caret-green-400 outline-none"
+            className="ml-2 flex-1 bg-transparent text-neutral-100 outline-none"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             ref={inputRef}
