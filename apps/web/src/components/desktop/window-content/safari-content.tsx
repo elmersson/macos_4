@@ -4,7 +4,7 @@ type SafariContentProps = {
 
 export function SafariContent({}: SafariContentProps) {
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-gray-900">
+    <div className="flex h-full flex-col rounded-b-lg bg-white dark:bg-gray-900">
       <div className="border-b p-2 dark:border-gray-700">
         <input
           className="w-full rounded border px-3 py-1 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"

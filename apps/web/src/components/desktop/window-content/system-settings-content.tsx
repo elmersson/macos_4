@@ -8,7 +8,7 @@ export function SystemSettingsContent({
   username,
 }: SystemSettingsContentProps) {
   return (
-    <div className="h-full overflow-y-auto bg-white p-6 dark:bg-gray-900 dark:text-gray-100">
+    <div className="h-full overflow-y-auto rounded-b-lg bg-white p-6 dark:bg-gray-900 dark:text-gray-100">
       <h2 className="mb-4 font-semibold text-2xl text-gray-800 dark:text-gray-100">
         System Settings
       </h2>

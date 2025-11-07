@@ -33,7 +33,7 @@ export function Window({
 }: WindowProps) {
   return (
     <div
-      className="absolute z-50 rounded-lg bg-white shadow-2xl dark:bg-gray-800"
+      className="absolute z-50 rounded-lg bg-transparent shadow-2xl shadow-black"
       style={{
         left: win.position.x,
         top: win.position.y,
@@ -44,7 +44,7 @@ export function Window({
     >
       {/* Window Title Bar */}
       <button
-        className={`flex w-full items-center justify-between rounded-t-lg bg-gray-200 px-4 py-2 dark:bg-gray-800 ${
+        className={`flex w-full items-center justify-between rounded-t-lg bg-gray-200 p-2 ring-1 ring-white/20 dark:bg-[#464646] ${
           win.isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         onDoubleClick={() => onDoubleClick(win.id)}
@@ -78,7 +78,7 @@ export function Window({
             <ChevronsLeftRight className="hidden h-full w-full rotate-45 text-gray-800/50 group-hover:block" />
           </button>
         </div>
-        <span className="font-medium text-gray-700 text-sm dark:text-gray-300">
+        <span className="font-medium text-neutral-700 text-xs dark:text-neutral-300">
           {win.title}
         </span>
         <div className="w-16" />
@@ -86,7 +86,7 @@ export function Window({
 
       {/* Window Content */}
       <button
-        className="h-[calc(100%-40px)] w-full text-left"
+        className="h-[calc(100%-32px)] w-full rounded-b-lg text-left ring-1 ring-white/10"
         onClick={() => onFocus(win.id)}
         type="button"
       >
