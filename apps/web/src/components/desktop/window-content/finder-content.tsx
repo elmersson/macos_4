@@ -133,24 +133,15 @@ export function FinderContent({ username }: FinderContentProps) {
   const breadcrumbs = () => {
     const segments = currentPath.split("/").filter((segment) => segment !== "");
     return (
-      <div className="mb-4 flex items-center text-sm">
-        <button
-          className="text-blue-500 hover:underline"
-          onClick={() => navigateToPath("/")}
-        >
-          Macintosh HD
-        </button>
+      <div className="flex items-center text-gray-400 text-xs">
+        <button onClick={() => navigateToPath("/")}>📁 Macintosh HD</button>
         {segments.map((segment, index) => {
           const path = "/" + segments.slice(0, index + 1).join("/");
           return (
             <>
               <span className="mx-2">/</span>
-              <button
-                className="text-blue-500 hover:underline"
-                key={path}
-                onClick={() => navigateToPath(path)}
-              >
-                {segment === username ? "Home" : segment}
+              <button key={path} onClick={() => navigateToPath(path)}>
+                {segment === username ? "📁 Home" : `📁 ${segment}`}
               </button>
             </>
           );
@@ -162,37 +153,21 @@ export function FinderContent({ username }: FinderContentProps) {
   const currentItems = fileSystem[currentPath] || [];
 
   return (
-    <div className="flex h-full flex-col rounded-b-lg bg-white dark:bg-gray-900">
-      <div className="border-gray-200 border-b p-4 dark:border-gray-700">
-        <div className="mb-2 flex items-center">
-          {currentPath !== "/" && (
-            <button
-              className="mr-4 rounded bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-              onClick={navigateUp}
-            >
-              ← Back
-            </button>
-          )}
-          <h2 className="font-semibold text-xl dark:text-gray-100">
-            {getPathDisplayName(currentPath)}
-          </h2>
-        </div>
-        {breadcrumbs()}
-      </div>
+    <div className="flex h-full flex-col rounded-b-lg dark:bg-[#303030]">
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {currentItems.map((item) => (
             <div
-              className={`flex cursor-pointer flex-col items-center rounded p-4 ${
+              className={`flex cursor-pointer flex-col items-center rounded p-2 ${
                 selectedItem === item.name
-                  ? "bg-blue-100 dark:bg-blue-900"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-gray-100/10"
+                  : "hover:bg-gray-100/10"
               }`}
               key={item.name}
               onClick={() => handleItemClick(item)}
             >
               <div className="text-3xl">{item.icon}</div>
-              <div className="mt-2 text-center text-sm dark:text-gray-100">
+              <div className="mt-2 text-center text-gray-200 text-xs">
                 {item.name}
               </div>
               {item.size && (
@@ -208,6 +183,12 @@ export function FinderContent({ username }: FinderContentProps) {
             This folder is empty.
           </div>
         )}
+      </div>
+      <div className="border-black border-t border-t-white/20 border-b p-1.5 px-2">
+        {breadcrumbs()}
+      </div>
+      <div className="rounded-b-lg bg-[#404040] p-1 text-center text-gray-500 text-xs">
+        1 of 28 selected
       </div>
     </div>
   );
