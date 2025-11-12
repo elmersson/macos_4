@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import useTime from "@/hooks/useTime";
 import { Battery } from "../navbar/battery";
+import { ControlCentre } from "../navbar/control-centre";
 import { Wifi } from "../navbar/wifi";
 
 type MenuBarProps = {
@@ -24,6 +25,7 @@ export function MenuBar({ onAppleMenuClick }: MenuBarProps) {
       <div className="flex items-center space-x-2">
         <Battery />
         <Wifi />
+        <ControlCentre />
         <button className="flex items-center text-sm" type="button">
           {format(currentTime, "EEE d MMM HH:mm")}
         </button>
