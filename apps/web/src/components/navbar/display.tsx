@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BsFillSunFill } from "react-icons/bs";
 import { Slider } from "../ui/slider";
 
 export function Display() {
@@ -14,6 +15,7 @@ export function Display() {
         <Slider
           className="w-[100%]"
           defaultValue={[display]}
+          icon={<BsFillSunFill />}
           max={100}
           onValueChange={handleDisplayChange}
           step={1}
