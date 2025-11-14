@@ -1,14 +1,13 @@
-import { useState } from 'react';
-import { Slider } from '../ui/slider';
+import { useState } from "react";
+import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
+import { Slider } from "../ui/slider";
 
-
-interface SoundProps {
-  // eslint-disable-next-line no-unused-vars
+type SoundProps = {
   setAudioVolume: (newVolume: number) => void;
-}
+};
 
 export function Sound({ setAudioVolume }: SoundProps) {
-  const [ volume, setVolume ] = useState(50);
+  const [volume, setVolume] = useState(50);
 
   const handleDisplayChange = (value: number[]) => {
     setVolume(value[0]);
@@ -16,15 +15,16 @@ export function Sound({ setAudioVolume }: SoundProps) {
   };
 
   return (
-    <div className="rounded-md px-3 py-2 w-[100%] bg-clip-padding backdrop-filter backdrop-blur-3xl bg-slate-200/10 dark:bg-slate-800/5 shadow-md border-slate-400/40 border">
-      <div className="space-y-2 mb-2">
-        <p className="text-xs font-bold">Sound</p>
+    <div className="w-[100%] rounded-md border border-slate-400/40 bg-slate-200/10 bg-clip-padding px-3 py-2 shadow-md backdrop-blur-3xl backdrop-filter dark:bg-slate-800/5">
+      <div className="mb-2 space-y-2">
+        <p className="font-bold text-xs">Sound</p>
         <Slider
-          defaultValue={[volume]}
-          max={100}
-          step={1}
           className="w-[100%]"
+          defaultValue={[volume]}
+          icon={volume === 0 ? <HiSpeakerXMark /> : <HiSpeakerWave />}
+          max={100}
           onValueChange={handleDisplayChange}
+          step={1}
         />
       </div>
     </div>
