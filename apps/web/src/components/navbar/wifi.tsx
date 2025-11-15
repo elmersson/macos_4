@@ -62,7 +62,7 @@ export function Wifi() {
           {wifiIcon()}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="mt-[6px] w-[270px]">
+      <DropdownMenuContent className="mt-2.5 w-[270px]">
         <DropdownMenuLabel className="flex flex-row items-center justify-between pb-0 text-white">
           <p>Wifi</p>
           <Switch checked={wifi} onCheckedChange={(bol) => setWifi(bol)} />
@@ -147,7 +147,7 @@ export function Wifi() {
         <DropdownMenuItem>
           <p className="text-sm text-white">Wifi Settings...</p>
         </DropdownMenuItem>
-      </DropdownMenuContent>{" "}
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 }

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useAudio } from "react-use";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +13,27 @@ import { StageAndScreen } from "./stage-and-screen";
 import { ThemeSwitcher } from "./theme-switcher";
 
 export function ControlCentre() {
+  const [audio, state, controls] = useAudio({
+    src: "/sound/Stockholmsvy.mp3",
+    autoPlay: false,
+  });
+
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlayPause = () => {
+    if (isPlaying) {
+      controls.pause();
+    } else {
+      controls.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  // Sync the isPlaying state with the actual audio state
+  useEffect(() => {
+    setIsPlaying(!state.paused);
+  }, [state.paused]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,13 +58,15 @@ export function ControlCentre() {
           </div>
         </div>
         <Display />
-        <Sound  setAudioVolume={(newVolume) => {
-          console.log(`New audio volume set to: ${newVolume}`);
-        }} />
-        <p className="text-xs font-bold">Control Centre</p>
-        <Music isPlaying={false} togglePlayPause={function (): void {
-          throw new Error("Function not implemented.");
-        } } />
+        <Sound
+          setAudioVolume={(newVolume) => {
+            controls.volume(newVolume);
+          }}
+        />
+        <p className="font-bold text-xs">Control Centre</p>
+        <Music isPlaying={isPlaying} togglePlayPause={togglePlayPause} />
+        {/* Hidden audio element */}
+        <div className="hidden">{audio}</div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
