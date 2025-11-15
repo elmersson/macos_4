@@ -14,6 +14,13 @@
 
   --color-neutral-300-10: #d4d4d41a;
   --color-neutral-500-10: #7373731a;
+  --color-apple-blue: #167ae5;
+
+  --text-4xs: 0.3rem;
+  --text-3xs: 0.5rem;
+  --text-xxs: 0.6rem;
+  --text-xs: 0.688rem;
+  --text-sm: 0.813rem;
 }
 
 html,

@@ -59,7 +59,7 @@ export function ConnectControl() {
         </div>
         <div>
           <p className="font-semibold text-xs">Wi-Fi</p>
-          <p className="text-xxs dark:text-slate-200/60">
+          <p className="text-xxs dark:text-white/80">
             {wifi ? "NETGEAR15-5G" : "Not connected"}
           </p>
         </div>
@@ -76,7 +76,7 @@ export function ConnectControl() {
         </div>
         <div>
           <p className="font-semibold text-xs">Bluetooth</p>
-          <p className="text-xxs dark:text-slate-200/60">
+          <p className="text-xxs dark:text-white/80">
             {bluetooth ? "On" : "Off"}
           </p>
         </div>
@@ -93,7 +93,7 @@ export function ConnectControl() {
         </div>
         <div>
           <p className="font-semibold text-xs">Airdrop</p>
-          <p className="text-xxs dark:text-slate-200/60">
+          <p className="text-xxs dark:text-white/80">
             {airdrop ? "Contacts only" : "Off"}
           </p>
         </div>
