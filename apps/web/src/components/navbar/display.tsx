@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { BsFillSunFill } from "react-icons/bs";
+import { useDisplayStore } from "@/stores/display-store";
 import { Slider } from "../ui/slider";
 
 export function Display() {
-  const [display, setDisplay] = useState(50);
+  const { display, setDisplay } = useDisplayStore();
+
   const handleDisplayChange = (value: number[]) => {
     setDisplay(value[0]);
   };
@@ -14,9 +15,10 @@ export function Display() {
         <p className="font-bold text-xs">Display</p>
         <Slider
           className="w-[100%]"
-          defaultValue={[display]}
+          defaultValue={[display]} // Convert to percentage
           icon={<BsFillSunFill />}
           max={100}
+          min={0}
           onValueChange={handleDisplayChange}
           step={1}
         />
