@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 type SliderProps = React.ComponentProps<typeof SliderPrimitive.Root> & {
-  icon?: React.ReactElement;
+  icon?: React.ReactElement<{ size?: number }>;
 };
 
 function Slider({

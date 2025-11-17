@@ -1,29 +1,81 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLoginStore } from "@/stores/login-store";
+import { type LoginFormData, loginSchema } from "./login-schema";
 
 export const Route = createFileRoute("/login")({
   component: LoginComponent,
 });
 
 function LoginComponent() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    username,
+    isLoading,
+    isLoggedIn,
+    password,
+    setUsername: setStoreUsername,
+    setPassword: setStorePassword,
+    setIsLoading,
+    setIsLoggedIn,
+    setSavedCredentials,
+  } = useLoginStore();
+
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  useEffect(() => {
+    // If user is already logged in, redirect to desktop
+    if (isLoggedIn) {
+      navigate({ to: "/desktop" });
+    }
+  }, [isLoggedIn, navigate]);
+
+  const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
 
     // Simulate login process
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // For demo purposes, any username/password works
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("username", username || "User");
+    // Check if credentials are saved
+    if (username && password) {
+      // Check if entered credentials match saved ones
+      if (data.username === username && data.password === password) {
+        // Credentials match, log in
+        setIsLoggedIn(true);
+        setStoreUsername(data.username);
+        setStorePassword(data.password);
+      } else {
+        // Credentials don't match
+        setError("root", {
+          message: "Invalid username or password",
+        });
+        setIsLoading(false);
+        return;
+      }
+    } else {
+      // No saved credentials, save them and log in
+      setSavedCredentials(data.username, data.password);
+      setIsLoggedIn(true);
+      setStoreUsername(data.username);
+      setStorePassword(data.password);
+    }
 
     setIsLoading(false);
     navigate({ to: "/desktop" });
@@ -46,7 +98,7 @@ function LoginComponent() {
         </div>
 
         {/* Login Form */}
-        <form className="space-y-6" onSubmit={handleLogin}>
+        <form className="space-y-6" onSubmit={handleSubmit(handleLogin)}>
           <div className="space-y-4">
             <div>
               <Label className="sr-only" htmlFor="username">
@@ -55,12 +107,15 @@ function LoginComponent() {
               <Input
                 className="h-12 w-full rounded-lg border-0 bg-white/90 px-4 text-gray-900 backdrop-blur-sm placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500/50"
                 id="username"
-                onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
-                required
                 type="text"
-                value={username}
+                {...register("username")}
               />
+              {errors.username && (
+                <p className="mt-1 text-red-200 text-sm">
+                  {errors.username.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -70,14 +125,23 @@ function LoginComponent() {
               <Input
                 className="h-12 w-full rounded-lg border-0 bg-white/90 px-4 text-gray-900 backdrop-blur-sm placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500/50"
                 id="password"
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                required
                 type="password"
-                value={password}
+                {...register("password")}
               />
+              {errors.password && (
+                <p className="mt-1 text-red-200 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </div>
+
+          {errors.root && (
+            <p className="text-center text-red-200 text-sm">
+              {errors.root.message}
+            </p>
+          )}
 
           <Button
             className="h-12 w-full rounded-lg border-0 bg-blue-600 font-medium text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
