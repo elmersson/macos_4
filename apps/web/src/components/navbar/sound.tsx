@@ -1,17 +1,16 @@
-import { useState } from "react";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
 import { Slider } from "../ui/slider";
 
 type SoundProps = {
-  setAudioVolume: (newVolume: number) => void;
+  volume: number;
+  setVolume: (newVolume: number) => void;
 };
 
-export function Sound({ setAudioVolume }: SoundProps) {
-  const [volume, setVolume] = useState(50);
+const VOLUME_MULTIPLIER = 100;
 
+export function Sound({ setVolume, volume }: SoundProps) {
   const handleDisplayChange = (value: number[]) => {
-    setVolume(value[0]);
-    setAudioVolume(value[0] / 100);
+    setVolume(value[0] / VOLUME_MULTIPLIER);
   };
 
   return (
@@ -20,7 +19,7 @@ export function Sound({ setAudioVolume }: SoundProps) {
         <p className="font-bold text-xs">Sound</p>
         <Slider
           className="w-[100%]"
-          defaultValue={[volume]}
+          defaultValue={[volume * VOLUME_MULTIPLIER]}
           icon={volume === 0 ? <HiSpeakerXMark /> : <HiSpeakerWave />}
           max={100}
           onValueChange={handleDisplayChange}
