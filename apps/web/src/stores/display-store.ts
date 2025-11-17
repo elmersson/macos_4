@@ -9,7 +9,7 @@ type DisplayState = {
 export const useDisplayStore = create<DisplayState>()(
   persist(
     (set) => ({
-      display: 80, // Default display value
+      display: 75, // Default display value
       setDisplay: (display) => set({ display }),
     }),
     {
