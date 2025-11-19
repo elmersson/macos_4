@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAudio } from "react-use";
 import useTime from "@/hooks/useTime";
 import { useAudioStore } from "@/stores/audio-store";
+import { AppleMenu } from "../navbar/apple-menu";
 import { Battery } from "../navbar/battery";
 import { ControlCentre } from "../navbar/control-centre";
 import { Wifi } from "../navbar/wifi";
@@ -46,12 +47,13 @@ export function MenuBar({ onAppleMenuClick }: MenuBarProps) {
       {/* Hidden audio element - always rendered to prevent audio from stopping */}
       <div className="hidden">{audio}</div>
       <div className="flex items-center space-x-4">
-        <button
+        {/* <button
           aria-label="Open System Settings"
           className="rounded px-2 py-1 font-bold text-xl transition-colors hover:bg-white/10"
           onClick={onAppleMenuClick}
           type="button"
-        />
+        /> */}
+        <AppleMenu />
         <span className="font-medium text-sm">Finder</span>
       </div>
 
