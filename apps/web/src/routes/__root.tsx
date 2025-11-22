@@ -7,9 +7,11 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import Header from "@/components/header";
 import Loader from "@/components/loader";
+import MacOSLoader from "@/components/macos-loader";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "../index.css";
+import { useEffect, useState } from "react";
 import { useDisplayStore } from "@/stores/display-store";
 
 export type RouterAppContext = {};
@@ -47,6 +49,18 @@ function RootComponent() {
 
   const { display } = useDisplayStore();
 
+  // macOS startup loader state
+  const [isAppLoaded, setIsAppLoaded] = useState(false);
+
+  useEffect(() => {
+    // Simulate app loading with minimum display time for macOS boot animation
+    const timer = setTimeout(() => {
+      setIsAppLoaded(true);
+    }, 8000); // 4 seconds for macOS boot simulation
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Hide header on login and desktop pages (macOS UI)
   const showHeader = location !== "/login" && location !== "/desktop";
 
@@ -67,7 +81,7 @@ function RootComponent() {
       >
         <div className={"grid h-svh grid-rows-[auto_1fr]"}>
           {showHeader && <Header />}
-          {isFetching ? <Loader /> : <Outlet />}
+          {isAppLoaded ? isFetching ? <Loader /> : <Outlet /> : <MacOSLoader />}
           {/* Dark overlay for values below 50% */}
           <div
             className="pointer-events-none fixed inset-0"
